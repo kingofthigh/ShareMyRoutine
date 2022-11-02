@@ -28,17 +28,20 @@ class index(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Post.objects.filter(author__followers__id=self.request.user.id)
-    
+        # 포스터 중, '포스터'의 '게시자'를 '팔로우'하는 사람이 현재 접속한 '유저'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         time = datetime.datetime.now()
         time = time.date()
         userWkoutExist = Wkout.objects.filter(author=self.request.user).filter(dt_created__contains=time)
+        # 운동 일지(Wkout) 중, '작성자'가 현재 접속한 '유저'이고, '생성날짜'가 오늘인 '운동 일지'
         if userWkoutExist:
             context['wkout_exist'] = userWkoutExist[0]
         else:
             context['wkout_exist'] = None
         return context
+        # 추가 데이더, 현재 접속한 유저의 운동일지 생성 여부
 
         
     
@@ -46,16 +49,15 @@ class index(LoginRequiredMixin, ListView):
 
 
 
-# 운동 기록 목록
+# 운동 일지 목록
 class WkoutListView(LoginRequiredMixin, ListView):
     model = Wkout
     tmeplate_name = "smr/wkout_list.html"
     context_object_name = "wkouts"
-    # paginate_by = 20
 
     def get_queryset(self):
         return Wkout.objects.filter(author__id=self.request.user.id)
-    
+    # 현재 접속한 '유저'의 '운동일지'
     def get_context_data(self, **kwargs):
         time = datetime.datetime.now()
         time = time.date()
@@ -63,6 +65,7 @@ class WkoutListView(LoginRequiredMixin, ListView):
         posts = Post.objects.filter(author__followers__id=self.request.user.id).filter(dt_created__contains=time)
         context["posts"] = posts 
         return context
+        # 추가 데이터, '포스터' 중 현재 접속한 '유저'가 '팔로우'한 '유저' 오늘 작성한 '포스터'
     
 
 class WkoutCreateView(LoginRequiredMixin, CreateView):
@@ -76,6 +79,8 @@ class WkoutCreateView(LoginRequiredMixin, CreateView):
     
     def get_success_url(self):
         return reverse("wkrecord-list", kwargs={"wkout_id": self.object.id})
+    # 운동일지 작성 폼
+    # 작성 완료 후, 운동 세트 기록 페이지(운동일지 내)로 이동
 
 
 class WkoutUpdateView(LoginAndOwnershipRequiredMixin, UpdateView):
@@ -86,6 +91,8 @@ class WkoutUpdateView(LoginAndOwnershipRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('wkrecord-list', kwargs={"wkout_id": self.object.id })
+    # 운동일지 업데이트 폼
+    # 작성 완료 후, 운동 세트 기록 페이지(운동일지 내)로 이동
 
 class WkoutDeleteView(LoginAndOwnershipRequiredMixin, DeleteView):
     model = Wkout
@@ -95,7 +102,8 @@ class WkoutDeleteView(LoginAndOwnershipRequiredMixin, DeleteView):
 
     def get(self, request, *args, **kwargs):
         return self.post(request, *args, **kwargs)
-
+    # 운동일지 삭제 폼
+    # 삭제 후 
     
 
 # 운동 기록 작성 
@@ -368,7 +376,7 @@ class CopyWkoutView(LoginRequiredMixin, View):
 
         # 오늘 만든 운동 작성일지가 있을 때
         if recent_wkout_page.dt_created.date() == time:
-            # 카피 테이블에 현재 포스트의 운동일지와 내가 오늘 만든 운동 작성일지가 없는 경우에만 카피한다.
+            # 카피 테이블에 현재 포스트의 운동일지와 내가 오늘 만든 운동 일지가 없는 경우에만 카피한다.
             copy = Copy.objects.create(
                 wkout=Wkout.objects.filter(author=self.request.user)[0],
                 copy_post=Post.objects.get(wkout__id=self.kwargs.get("wkout_id"))
@@ -385,7 +393,7 @@ class CopyWkoutView(LoginRequiredMixin, View):
             return redirect('wkrecord-list', wkout_id=recent_wkout_page.id )
             # 있을 경우 
         else:
-            return redirect('wkout-create')
+            return redirect('copy-wkout-create')
 
 class CopyWkoutCreateView(LoginRequiredMixin, CreateView):
     model = Wkout

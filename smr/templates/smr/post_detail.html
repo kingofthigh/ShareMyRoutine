@@ -36,7 +36,7 @@
                         {% if wkout_exist %} 
                             {% comment %} 복사본이 없다면 복사하러 간다.  {% endcomment %}
                             {% if not copy_list %}
-                                <button type='submit'>
+                                <button style="border:0; background-color:white;" type='submit'>
                                     <img class="post-icon" src="{% static 'smr/icons/copy.png' %}">
                                 </button>
                             {% comment %} 복사본이 있으면 복사 불가 상태 {% endcomment %}
